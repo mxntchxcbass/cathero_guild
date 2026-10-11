@@ -1,0 +1,7 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {spawnSync} from 'node:child_process';import {questionVisibility} from '../lib/question-visibility.mjs';
+function visible(guild,user,admin){const v=questionVisibility(guild,user,admin);const r=spawnSync('python',['-c',`import sqlite3,json,sys
+v=json.loads(sys.stdin.read());d=sqlite3.connect(':memory:');d.execute('CREATE TABLE support_questions(id TEXT,guild_id TEXT,author_id TEXT,private INTEGER)');d.executemany('INSERT INTO support_questions VALUES(?,?,?,?)',[('public','g','alice',0),('alice-private','g','alice',1),('bob-private','g','bob',1),('foreign','other','alice',0)]);print(json.dumps([r[0] for r in d.execute('SELECT id FROM support_questions WHERE '+v['sql'],v['values'])]))`],{input:JSON.stringify(v),encoding:'utf8'});assert.equal(r.status,0,r.stderr);return JSON.parse(r.stdout)}
+test('ordinary guild member sees public and own private questions only',()=>assert.deepEqual(visible('g','alice',false),['public','alice-private']));
+test('guild administrator sees private questions in their current guild',()=>assert.deepEqual(visible('g','admin',true),['public','alice-private','bob-private']));
+test('administrator cannot leak another guild through visibility query',()=>assert.deepEqual(visible('other','admin',true),['foreign']));
+test('unrelated member sees only public questions',()=>assert.deepEqual(visible('g','charlie',false),['public']));

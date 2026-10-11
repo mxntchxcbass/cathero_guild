@@ -1,0 +1,7 @@
+import {execFileSync} from 'node:child_process';import {readFileSync} from 'node:fs';
+const rules=[['private-key',/-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/],['github-token',/\b(?:ghp_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{40,})/],['openai-key',/\bsk-(?:proj-)?[A-Za-z0-9_-]{30,}/],['google-key',/\bAIza[A-Za-z0-9_-]{30,}/],['aws-key',/\bAKIA[A-Z0-9]{16}/]];
+const findings=[];let files=0,blobs=0;
+const inspect=(text,path,scope)=>{for(const [rule,re] of rules){const index=text.search(re);if(index>=0)findings.push({scope,path,rule,line:text.slice(0,index).split('\n').length})}};
+for(const path of execFileSync('git',['ls-files','-co','--exclude-standard'],{encoding:'utf8'}).trim().split('\n')){if(!/\.(?:[cm]?[jt]sx?|json|ya?ml|html|sql|md|toml)$/.test(path)||path==='scripts/security-scan.mjs')continue;try{const text=readFileSync(path,'utf8');if(text.length>2000000)continue;files++;inspect(text,path,'working-tree')}catch{}}
+for(const row of execFileSync('git',['rev-list','--objects','--all'],{encoding:'utf8'}).trim().split('\n')){const space=row.indexOf(' ');if(space<0)continue;const oid=row.slice(0,space),path=row.slice(space+1);if(!/\.(?:[cm]?[jt]sx?|json|ya?ml|html|sql|md|toml)$/.test(path))continue;try{const size=Number(execFileSync('git',['cat-file','-s',oid],{encoding:'utf8'}));if(size>2000000)continue;blobs++;inspect(execFileSync('git',['cat-file','-p',oid],{encoding:'utf8',maxBuffer:2100000}),path,'git-history')}catch{}}
+console.log(JSON.stringify({files,historyBlobs:blobs,findings}));if(findings.length)process.exitCode=1;

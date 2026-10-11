@@ -1,0 +1,9 @@
+Source version: 82
+Commit: da054e865f9e87db309441aed5db6b44ee07301f
+Exported: 2026-10-11
+
+This ZIP contains source code, migrations and tracked assets.
+It does not contain live D1 data, environment secrets or Git history.
+Keep .openai/hosting.json for the existing Sites project.
+For separate hosting, replace project/account/database identifiers and configure secrets independently.
+SQL migrations may contain historical setup prices; they are not a full database backup.

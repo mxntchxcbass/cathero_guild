@@ -1,0 +1,5 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {resolveItemValue,evaluateRewards} from '../public/expected-value.mjs';
+import {allocate} from '../public/guild-core.mjs';
+test('rounds final manual, linked and expected unit prices before allocation',()=>{assert.equal(resolveItemValue({price:10.49},[]).price,10);assert.equal(resolveItemValue({price:10.5},[]).price,11);assert.equal(resolveItemValue({valuation:'catalog',catalogId:'p'},[{item_id:'p',unit_price:'10.5'}]).price,11);const recipe={mode:'random',rewards:[{name:'보상',qty:1,chance:25,price:42},{name:'없음',qty:1,chance:75,price:0}]};assert.equal(evaluateRewards(recipe).price,10.5);const item=resolveItemValue({id:'box',name:'상자',basis:'equal',kind:'market',qty:3,valuation:'expected',rewardRecipe:recipe},[]);assert.equal(item.price,11);const plan=allocate({items:[item],members:[{id:'m',name:'길드원',t:100,active:true,carry:0,pools:{}}],minimum:1,equal:0});assert.equal(plan.value,33);assert.equal(plan.rows[0].paid,33)});
