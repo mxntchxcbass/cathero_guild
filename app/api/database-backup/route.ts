@@ -1,0 +1,6 @@
+import {getChatGPTUser} from '../../chatgpt-auth';
+import {isPlatformAdmin} from '../../../lib/workspaces';
+import {backupConfigured,databaseSnapshot,githubBackup} from '../../../lib/database-backup';
+async function admin(){const user=await getChatGPTUser();return !!user&&await isPlatformAdmin(user.userId,user.email)}
+export async function GET(req:Request){if(!await admin())return Response.json({error:'서비스 관리자만 DB 전체 백업에 접근할 수 있습니다.'},{status:403});if(new URL(req.url).searchParams.get('download')==='sql'){const data=await databaseSnapshot();return new Response(data.sql,{headers:{'Content-Type':'application/sql; charset=utf-8','Content-Disposition':'attachment; filename="cat-hero-d1-backup.sql"','Cache-Control':'no-store'}})}return Response.json({database:'Cloudflare D1',githubConfigured:backupConfigured()},{headers:{'Cache-Control':'no-store'}})}
+export async function POST(req:Request){if(import.meta.env.DEV)return Response.json({error:'개발 환경에서는 운영 백업을 실행하지 않습니다.'},{status:403});if(!await admin())return Response.json({error:'서비스 관리자만 DB 전체 백업에 접근할 수 있습니다.'},{status:403});if(req.headers.get('origin')!==new URL(req.url).origin)return Response.json({error:'잘못된 요청 출처'},{status:403});try{return Response.json(await githubBackup(),{headers:{'Cache-Control':'no-store'}})}catch(e){return Response.json({error:'DB 백업 실패. 서버 설정을 확인하세요.'},{status:503})}}
