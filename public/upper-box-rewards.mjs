@@ -1,0 +1,10 @@
+export const upperBoxes=['목걸이','반지'].flatMap(part=>[['blue','평범한 '+part+' 상자 III',part],['purple','빛나는 '+part+' 상자 III',part],['red','눈부신 '+part+' 상자 III',part]]);
+export const upperBoxId=(color,part='목걸이')=>'shared-upper-box-expected:'+color+(part==='목걸이'?'':':'+part);
+export function upperBoxRecipe(color,part='목걸이'){
+ if(!['목걸이','반지'].includes(part))throw Error('상층 1층은 목걸이·반지 상자를 지원합니다.');
+ const r=(name,qty,chance,extra={})=>({name,qty:name==='다이아'?qty/10:qty,chance,marketName:name==='다이아'?'다이아 10개 환산':name,price:0,group:'1',...extra});
+ const common=[r('목걸이 소환',1,color==='blue'?4:color==='purple'?11:24,{ticketPart:part}),r('격전지 하층 1구역 티켓',1,color==='blue'?.4:color==='purple'?1:2),r('냥혼석',1,color==='blue'?6:color==='purple'?12:24)];
+ const rows=color==='blue'?[r('메달 파편',2,10.3),r('메달 파편',1,25),r('루키 펀치 목걸이 레시피',1,.2),r('미니 펀치 목걸이 레시피',1,1),r('다이아',6000,1),r('다이아',600,10.6),r('소액 보상',1,41.5)]:color==='purple'?[r('메달 파편',3,5.3),r('메달 파편',2,12),r('메달 파편',1,18),r('럭키 펀치 목걸이 레시피',1,.07),r('루키 펀치 목걸이 레시피',1,.5),r('미니 펀치 목걸이 레시피',1,2.5),r('검은 보석',150,.5),r('검은 보석',15,5.5),r('다이아',7500,.5),r('다이아',750,4.5),r('소액 보상',1,26.63)]:color==='red'?[r('메달 파편',5,4.39),r('메달 파편',3,13),r('메달 파편',2,13),r('스타 펀치 목걸이 레시피',1,.01),r('럭키 펀치 목걸이 레시피',1,.1),r('루키 펀치 목걸이 레시피',1,.8),r('미니 펀치 목걸이 레시피',1,2),r('검은 보석',200,.5),r('검은 보석',20,4),r('다이아',10000,.5),r('다이아',1000,2),r('소액 보상',1,9.7)]:null;
+ if(!rows)throw Error('상층 상자 종류를 확인하세요.');return {mode:'random',source:'사용자 확률표 검증 2026-10-11',rewards:[...common,...rows].map(r=>({...r,name:r.name.replaceAll('목걸이',part),marketName:r.marketName.replaceAll('목걸이',part)}))};
+}
+export function withUpperBoxRecipe(item,catalog){const match=upperBoxes.find(([,name])=>item.name.trim().replace(/Ⅲ|3/g,'III')===name);if(!match)return item;const shared=catalog.find(p=>p.item_id===upperBoxId(match[0],match[2]));return shared?{...item,valuation:'catalog',catalogId:shared.item_id,rewardRecipe:undefined}:{...item,valuation:'expected',rewardRecipe:upperBoxRecipe(match[0],match[2])};}

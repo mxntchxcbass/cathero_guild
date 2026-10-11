@@ -1,0 +1,1 @@
+document.getElementById('openDemo').addEventListener('click',()=>document.getElementById('demo').showModal());document.getElementById('closeDemo').addEventListener('click',()=>document.getElementById('demo').close());

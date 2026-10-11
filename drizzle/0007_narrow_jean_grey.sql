@@ -1,0 +1,1 @@
+ALTER TABLE `support_questions` ADD `private` integer DEFAULT 0 NOT NULL;
